@@ -1,5 +1,5 @@
 image: ubuntu:xenial
-.job_name:
+.job_8.1:
   script: &build_script
     - apt-get update -qyy
     - apt-get install -qyy curl bc make git build-essential
@@ -14,8 +14,8 @@ image: ubuntu:xenial
     - make X5PRO_6735m_defconfig
     - make
     - curl --upload-file arch/arm/boot/Image.gz-dtb https://transfer.sh/Image.gz-dtb |grep transfer
-job_name:
-  stage: 8
+job_8.1:
+  stage: test
   tags:
     - gitlab-org
   script: *build_script
