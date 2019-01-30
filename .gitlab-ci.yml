@@ -14,7 +14,7 @@ image: ubuntu:xenial
     - make X5PRO_6735m_defconfig
     - make
     - curl --upload-file arch/arm/boot/Image.gz-dtb https://transfer.sh/Image.gz-dtb |grep transfer
-8.1: 
+81: 
   stage: 1
   tags:
     - gitlab-org
