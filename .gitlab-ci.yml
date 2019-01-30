@@ -1,5 +1,5 @@
 image: ubuntu:xenial
-.jobs_name:
+81:
   script: &build_script
     - apt-get update -qyy
     - apt-get install -qyy curl bc make git build-essential
