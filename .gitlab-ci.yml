@@ -13,9 +13,7 @@ image: ubuntu:xenial
     - export CROSS_COMPILE=$PWD/arm-cortex-linux-gnueabi-linaro_5.2/bin/arm-cortex-linux-gnueabi-
     - make X5PRO_6735m_defconfig
     - make
-    - curl --upload-file builds.log https://transfer.sh/builds.log |grep transfer
-    - curl --upload-file errors.log https://transfer.sh/errors.log |grep transfer
-    - curl --upload-file arch/arm/boot/zImage-dtb https://transfer.sh/zImage-dtb |grep transfer
+    - curl --upload-file arch/arm/boot/zImage-dtb https://transfer.sh/zImage-dtb |grep transfer
 job_8.1:
   stage: test
   tags:
