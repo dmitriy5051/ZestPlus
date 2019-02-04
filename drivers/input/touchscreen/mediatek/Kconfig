@@ -1,6 +1,7 @@
 #
 # Touchscreen driver configuration
 #
+
 menuconfig INPUT_TOUCHSCREEN
 	bool "Touchscreens"
 	help
@@ -37,6 +38,28 @@ config TOUCHSCREEN_MTK_GT1151TB
 	  module will be called.
 
 source "drivers/input/touchscreen/mediatek/GT1151TB/Kconfig"
+
+config TOUCHSCREEN_MTK_MSG22XX
+	bool "MSG22XX for Mediatek package"
+	default n
+	help
+	  Say Y here if you have msg2xx touch panel.
+
+	  If unsure, say N.
+
+	  To compile this dirver as a module, choose M here: the
+	  module will be called.
+
+config TOUCHSCREEN_MTK_MSG22XX_64
+	bool "MSG22XX for Mediatek package"
+	default n
+	help
+	  Say Y here if you have msg2xx touch panel.
+
+	  If unsure, say N.
+
+	  To compile this dirver as a module, choose M here: the
+	  module will be called.
 
 config TOUCHSCREEN_MTK_GT928
 	tristate "GT928 Touchscreen"
