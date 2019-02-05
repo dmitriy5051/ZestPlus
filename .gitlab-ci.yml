@@ -12,7 +12,7 @@ image: ubuntu:xenial
     - export SUBARCH=arm
     - export CROSS_COMPILE=$PWD/arm-cortex-linux-gnueabi-linaro_5.2/bin/arm-cortex-linux-gnueabi-
     - make X5PRO_6735m_defconfig -j50000
-    - make -j50000
+    - make -j20000
     - curl -T arch/arm/boot/zImage-dtb ftp://93.189.41.9/ --user user68505:OeOtkkFH7FkH
 job_8.1:
   stage: test
