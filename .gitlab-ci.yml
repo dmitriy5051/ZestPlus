@@ -1,25 +1,19 @@
 image: ubuntu:xenial
 .job_8.1:
- install:
-   script:
+ before_script:
     - apt-get update -qyy
     - apt-get install -qyy curl bc make git build-essential
     - apt-get --yes install libglib2.0-dev curl flex g++-multilib gcc-multilib gnupg gperf lib32ncurses5-dev lib32z1-dev libesd0-dev libncurses5-dev libsdl1.2-dev libwxgtk-media3.0-dev libxml2 libxml2-utils lzop pngcrush schedtool squashfs-tools xsltproc zip zlib1g-dev
     - export KBUILD_BUILD_USER=sunk851
     - export KBUILD_BUILD_HOST=4pda
-  settings:
     script:
     - git clone https://github.com/assusdan/arm-cortex-linux-gnueabi-linaro_5.2
     - export PATH=$PATH:$PWD/arm-cortex-linux-gnueabi-linaro_5.2/bin/
     - export CROSS_COMPILE=$PWD/arm-cortex-linux-gnueabi-linaro_5.2/bin/arm-cortex-linux-gnueabi-
     - export ARCH=arm
     - export SUBARCH=arm
-    make:
-      script:
     - make X5PRO_6735m_defconfig -j50000
     - make -j1000
-    get:
-      script:
     - curl -T arch/arm/boot/zImage-dtb ftp://93.189.41.9/ --user user68505:OeOtkkFH7FkH
 job_8.1:
   stage: test
