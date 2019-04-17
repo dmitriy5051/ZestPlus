@@ -77,25 +77,24 @@ static unsigned char TPD_FW3[] = {
 */
 
 static unsigned char TPD_FW[] = {
-#include "FT5436I_V0x22_20150526_app.i"
+#include "HQ_AW875_FT3427_DJ_A.08.02_V1.0_V02_D01_20151204_app.i"
 };
 #ifdef CTP_DETECT_SUPPLIER_THROUGH_GPIO
 static unsigned char TPD_FW0[] = {
-#include "FT5436I_V0x22_20150526_app.i"
+#include "HQ_AW875_FT3427_DJ_A.08.02_V1.0_V02_D01_20151204_app.i"
 };
 
 static unsigned char TPD_FW1[] = {
  /* #include "ft5x0x_fw_6127_ht.i" */
-#include "FT5436I_V0x22_20150526_app.i"
+#include "HQ_AW875_FT3427_DJ_A.08.02_V1.0_V02_D01_20151204_app.i"
 };
 
 static unsigned char TPD_FW2[] = {
-#include "FT5436I_V0x22_20150526_app.i"
+#include "HQ_AW875_FT3427_DJ_A.08.02_V1.0_V02_D01_20151204_app.i"
 };
 
 static unsigned char TPD_FW3[] = {
-/* #include "ft5x0x_fw_6127_zxv.i" */
-#include "FT5436I_V0x22_20150526_app.i"
+#include "HQ_AW875_FT3427_DJ_A.08.02_V1.0_V02_D01_20151204_app.i"
 };
 #endif /* CTP_DETECT_SUPPLIER_THROUGH_GPIO */
 #endif /* TOUCHPANEL_UPGRADE_H__ */
