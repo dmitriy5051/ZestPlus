@@ -50,8 +50,6 @@ typedef struct {
 } st_cmd_head;
 #pragma pack()
 st_cmd_head cmd_head;
-static DEFINE_MUTEX(rw_mutex);
-
 
 s32 DATA_LENGTH = 0;
 s8 IC_TYPE[16] = "GT9XX";
@@ -214,22 +212,13 @@ Output:
 static ssize_t gt1x_tool_write(struct file *filp, const char __user *buff, size_t len, loff_t *data)
 {
 	u64 ret = 0;
-	u8 *pre_data_p;
-	u8 *post_data_p;
 
 	GTP_DEBUG_FUNC();
 	GTP_DEBUG_ARRAY((u8 *) buff, len);
 
-	mutex_lock(&rw_mutex);
-	pre_data_p = cmd_head.data;
 	ret = copy_from_user(&cmd_head, buff, CMD_HEAD_LENGTH);
 	if (ret)
 		GTP_ERROR("copy_from_user failed.");
-	post_data_p = cmd_head.data;
-	if (pre_data_p != post_data_p) {
-		GTP_ERROR("pointer is overwritten! %p, %p, %p, %p, %dx\n",
-			pre_data_p, post_data_p, &cmd_head, &cmd_head.data, (int)CMD_HEAD_LENGTH);
-	}
 
 	GTP_DEBUG("wr  :0x%02x.", cmd_head.wr);
 	/*
@@ -247,8 +236,6 @@ static ssize_t gt1x_tool_write(struct file *filp, const char __user *buff, size_
 	   GTP_DEBUG("len:%d.", (s32)len);
 	   GTP_DEBUG("buf[20]:0x%02x.", buff[CMD_HEAD_LENGTH]);
 	 */
-	if (cmd_head.data_len > DATA_LENGTH)
-		cmd_head.data_len = DATA_LENGTH;
 
 	if (1 == cmd_head.wr) {
 		u16 addr, data_len, pos;
@@ -256,7 +243,6 @@ static ssize_t gt1x_tool_write(struct file *filp, const char __user *buff, size_
 		if (1 == cmd_head.flag) {
 			if (comfirm()) {
 				GTP_ERROR("[WRITE]Comfirm fail!");
-				mutex_unlock(&rw_mutex);
 				return -1;
 			}
 		} else if (2 == cmd_head.flag) {
@@ -271,7 +257,6 @@ static ssize_t gt1x_tool_write(struct file *filp, const char __user *buff, size_
 			ret = copy_from_user(&cmd_head.data[GTP_ADDR_LENGTH], &buff[CMD_HEAD_LENGTH + pos], len);
 			if (ret) {
 				GTP_ERROR("[WRITE]copy_from_user failed.");
-				mutex_unlock(&rw_mutex);
 				return -1;
 			}
 			cmd_head.data[0] = ((addr >> 8) & 0xFF);
@@ -281,7 +266,6 @@ static ssize_t gt1x_tool_write(struct file *filp, const char __user *buff, size_
 
 			if (tool_i2c_write(cmd_head.data, len + GTP_ADDR_LENGTH) <= 0) {
 				GTP_ERROR("[WRITE]Write data failed!");
-				mutex_unlock(&rw_mutex);
 				return -1;
 			}
 			addr += len;
@@ -295,9 +279,6 @@ static ssize_t gt1x_tool_write(struct file *filp, const char __user *buff, size_
 		return cmd_head.data_len + CMD_HEAD_LENGTH;
 	} else if (3 == cmd_head.wr) {	/*gt1x unused*/
 
-		cmd_head.data_len =
-			cmd_head.data_len > sizeof(IC_TYPE) ?
-				sizeof(IC_TYPE) : cmd_head.data_len;
 		memcpy(IC_TYPE, cmd_head.data, cmd_head.data_len);
 		return cmd_head.data_len + CMD_HEAD_LENGTH;
 	} else if (5 == cmd_head.wr) {
@@ -309,20 +290,17 @@ static ssize_t gt1x_tool_write(struct file *filp, const char __user *buff, size_
 #ifdef CONFIG_GTP_ESD_PROTECT
 		gt1x_esd_switch(SWITCH_OFF);
 #endif
-		mutex_unlock(&rw_mutex);
 		return CMD_HEAD_LENGTH;
 	} else if (9 == cmd_head.wr) {	/*enable irq!*/
 		gt1x_irq_enable();
 #ifdef CONFIG_GTP_ESD_PROTECT
 		gt1x_esd_switch(SWITCH_ON);
 #endif
-		mutex_unlock(&rw_mutex);
 		return CMD_HEAD_LENGTH;
 	} else if (17 == cmd_head.wr) {
 		ret = copy_from_user(&cmd_head.data[GTP_ADDR_LENGTH], &buff[CMD_HEAD_LENGTH], cmd_head.data_len);
 		if (ret) {
 			GTP_DEBUG("copy_from_user failed.");
-			mutex_unlock(&rw_mutex);
 			return -1;
 		}
 
@@ -333,7 +311,7 @@ static ssize_t gt1x_tool_write(struct file *filp, const char __user *buff, size_
 			gt1x_rawdiff_mode = false;
 			GTP_DEBUG("gtp leave rawdiff.");
 		}
-		mutex_unlock(&rw_mutex);
+
 		return CMD_HEAD_LENGTH;
 	} else if (11 == cmd_head.wr) {
 		gt1x_enter_update_mode();
@@ -344,12 +322,9 @@ static ssize_t gt1x_tool_write(struct file *filp, const char __user *buff, size_
 		memcpy(cmd_head.data, &buff[CMD_HEAD_LENGTH], cmd_head.data_len);
 		GTP_DEBUG("update firmware, filename: %s", cmd_head.data);
 		ret = gt1x_update_firmware((void *)cmd_head.data);
-		if (ret) {
-			mutex_unlock(&rw_mutex);
+		if (ret)
 			return -1;
-		}
 	}
-	mutex_unlock(&rw_mutex);
 	return CMD_HEAD_LENGTH;
 }
 
@@ -388,12 +363,9 @@ static ssize_t gt1x_tool_read(struct file *filp, char __user *buffer, size_t cou
 		*ppos = 0;
 		return 0;
 	}
-	if (cmd_head.data_len > DATA_LENGTH)
-		cmd_head.data_len = DATA_LENGTH;
-	mutex_lock(&rw_mutex);
+
 	if (cmd_head.wr % 2) {
 		GTP_ERROR("[READ] invaild operator fail!");
-		mutex_unlock(&rw_mutex);
 		return -1;
 	} else if (!cmd_head.wr) {
 		u16 addr, data_len, len, loc;
@@ -401,7 +373,6 @@ static ssize_t gt1x_tool_read(struct file *filp, char __user *buffer, size_t cou
 		if (1 == cmd_head.flag) {
 			if (comfirm()) {
 				GTP_ERROR("[READ]Comfirm fail!");
-				mutex_unlock(&rw_mutex);
 				return -1;
 			}
 		} else if (2 == cmd_head.flag) {
@@ -424,7 +395,6 @@ static ssize_t gt1x_tool_read(struct file *filp, char __user *buffer, size_t cou
 			cmd_head.data[1] = (addr & 0xFF);
 			if (tool_i2c_read(cmd_head.data, len) <= 0) {
 				GTP_ERROR("[READ]Read data failed!");
-				mutex_unlock(&rw_mutex);
 				return -1;
 			}
 			memcpy(&buffer[loc], &cmd_head.data[GTP_ADDR_LENGTH], len);
@@ -434,11 +404,9 @@ static ssize_t gt1x_tool_read(struct file *filp, char __user *buffer, size_t cou
 			GTP_DEBUG_ARRAY(&cmd_head.data[GTP_ADDR_LENGTH], len);
 		}
 		*ppos += cmd_head.data_len;
-		mutex_unlock(&rw_mutex);
 		return cmd_head.data_len;
 	} else if (2 == cmd_head.wr) {
 		GTP_DEBUG("Return ic type:%s len:%d.", buffer, (s32) cmd_head.data_len);
-		mutex_unlock(&rw_mutex);
 		return -1;
 	} else if (4 == cmd_head.wr) {
 		buffer[0] = update_info.progress >> 8;
@@ -446,11 +414,9 @@ static ssize_t gt1x_tool_read(struct file *filp, char __user *buffer, size_t cou
 		buffer[2] = update_info.max_progress >> 8;
 		buffer[3] = update_info.max_progress & 0xff;
 		*ppos += 4;
-		mutex_unlock(&rw_mutex);
 		return 4;
 	} else if (6 == cmd_head.wr) {
 		/*Read error code!*/
-		mutex_unlock(&rw_mutex);
 		return -1;
 	} else if (8 == cmd_head.wr) {	/*Read driver version*/
 		s32 tmp_len;
@@ -460,11 +426,8 @@ static ssize_t gt1x_tool_read(struct file *filp, char __user *buffer, size_t cou
 		buffer[tmp_len] = 0;
 		*ppos += tmp_len + 1;
 		tmp_len += 1;
-		mutex_unlock(&rw_mutex);
 		return tmp_len;
 	}
 	*ppos += cmd_head.data_len;
-	mutex_unlock(&rw_mutex);
 	return cmd_head.data_len;
 }
-MODULE_LICENSE("GPL");
