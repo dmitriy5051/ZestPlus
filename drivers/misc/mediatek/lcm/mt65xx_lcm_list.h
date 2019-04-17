@@ -103,8 +103,11 @@ extern LCM_DRIVER cm_n070ice_dsi_vdo_lcm_drv;
 extern LCM_DRIVER ej101ia_lcm_drv;
 extern LCM_DRIVER scf0700m48ggu02_lcm_drv;
 extern LCM_DRIVER nt35510_fwvga_lcm_drv;
-#if defined(GN_SSD2825_SMD_S6E8AA)
-extern LCM_DRIVER gn_ssd2825_smd_s6e8aa;
+#if defined(ILI9881C_DSI_VDO_HD720_LD_ZAL1506)
+extern LCM_DRIVER ili9881c_dsi_vdo_hd720_ld_zal1506_lcm_drv;
+#endif
+#if defined(HX8394F_DSI_VDO_HD720_BY_ZAL1506)
+extern LCM_DRIVER hx8394f_dsi_vdo_hd720_by_zal1506_lcm_drv;
 #endif
 extern LCM_DRIVER nt35517_dsi_vdo_lcm_drv;
 extern LCM_DRIVER hx8369_dsi_bld_lcm_drv;
