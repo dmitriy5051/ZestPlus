@@ -47,11 +47,11 @@ LCM_DRIVER *lcm_driver_list[] = {
 #if defined(HCT_HX8394F_DSI_VDO_HD_CMI)
 &hct_hx8394f_dsi_vdo_hd_cmi,
 #endif
-#if defined(HCT_OTM1282_DSI_VDO_HD_AUO)
-&hct_otm1282_dsi_vdo_hd_auo,
+#if defined(ILI9881C_DSI_VDO_HD720_LD_ZAL1506)
+extern LCM_DRIVER ili9881c_dsi_vdo_hd720_ld_zal1506_lcm_drv;
 #endif
-#if defined(HCT_RM68200_DSI_VDO_HD_CPT)
-&hct_rm68200_dsi_vdo_hd_cpt,
+#if defined(HX8394F_DSI_VDO_HD720_BY_ZAL1506)
+extern LCM_DRIVER hx8394f_dsi_vdo_hd720_by_zal1506_lcm_drv;
 #endif
 #if defined(HCT_NT35521S_DSI_VDO_HD_BOE_50_XLD)
 &hct_nt35521s_dsi_vdo_hd_boe_50_xld,
