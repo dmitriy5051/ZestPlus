@@ -1,24 +1,22 @@
-/*
-* Copyright (C) 2016 MediaTek Inc.
-*
-* This program is free software; you can redistribute it and/or modify
-* it under the terms of the GNU General Public License version 2 as
-* published by the Free Software Foundation.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-* See http://www.gnu.org/licenses/gpl-2.0.html for more details.
-*/
+/******************************************************************************
+ * mt_gpio_base.c - MTKLinux GPIO Device Driver
+ *
+ * Copyright 2008-2009 MediaTek Co.,Ltd.
+ *
+ * DESCRIPTION:
+ *     This file provid the other drivers GPIO relative functions
+ *
+ ******************************************************************************/
 
-#include "6735_gpio.h"
+
+#include <6735_gpio.h>
 #include <linux/types.h>
 #include "mt-plat/sync_write.h"
 #include <mt-plat/mt_gpio.h>
 #include <mt-plat/mt_gpio_core.h>
-#include "mt_gpio_base.h"
+#include <mt_gpio_base.h>
 /* autogen */
-#include "gpio_cfg.h"
+#include <gpio_cfg.h>
 #ifdef CONFIG_OF
 #include <linux/of_address.h>
 #endif
@@ -113,28 +111,17 @@ int mt_set_gpio_pull_enable_base(unsigned long pin, unsigned long enable)
 	GPIO_WR32(PULLEN_addr[pin].addr, reg);
 #else
 
-	if ((PULLEN_offset[pin].offset == -1) && (pupd_offset[pin].offset == -1)) {
+	if (PULLEN_offset[pin].offset == -1) {
 		gpio_pullen_unsupport[pin] = -1;
 		return GPIO_PULL_EN_UNSUPPORTED;
 	}
 
-	if (PULLEN_offset[pin].offset != -1) {
-		if (enable == GPIO_PULL_DISABLE)
-			GPIO_SET_BITS((1L << (PULLEN_offset[pin].offset)),
-				PULLEN_addr[pin].addr + 8);
-		else
-			GPIO_SET_BITS((1L << (PULLEN_offset[pin].offset)),
-				PULLEN_addr[pin].addr + 4);
-
-	} else {
-
-		if (enable == GPIO_PULL_DISABLE)
-			GPIO_SET_BITS((3L << (pupd_offset[pin].offset)),
-				pupd_addr[pin].addr + 8);
-		else
-			GPIO_SET_BITS((2L << (pupd_offset[pin].offset)),
-				pupd_addr[pin].addr + 4);
-	}
+	if (enable == GPIO_PULL_DISABLE)
+		GPIO_SET_BITS((1L << (PULLEN_offset[pin].offset)),
+				      PULLEN_addr[pin].addr + 8);
+	else
+		GPIO_SET_BITS((1L << (PULLEN_offset[pin].offset)),
+				      PULLEN_addr[pin].addr + 4);
 
 #endif
 
@@ -162,7 +149,7 @@ int mt_get_gpio_pull_enable_base(unsigned long pin)
 
 	bit = pupd_offset[pin].offset;
 	data = GPIO_RD32(pupd_addr[pin].addr);
-	return ((data & (0x3 << bit)) != 0) ? 1 : 0;
+	return ((data & (0x7 << bit)) != 0) ? 1 : 0;
 
 }
 
@@ -213,13 +200,12 @@ int mt_get_gpio_smt_base(unsigned long pin)
 	unsigned long data;
 	unsigned long bit = 0;
 
+	bit = SMT_offset[pin].offset;
 	if (pin >= MAX_GPIO_PIN)
 		return -ERINVAL;
 
 	if (SMT_offset[pin].offset == -1)
 		return GPIO_SMT_UNSUPPORTED;
-
-	bit = SMT_offset[pin].offset;
 	data = GPIO_RD32(SMT_addr[pin].addr);
 	return ((data & (1L << bit)) != 0) ? 1 : 0;
 }
@@ -269,6 +255,10 @@ int mt_set_gpio_pull_select_base(unsigned long pin, unsigned long select)
 	if (pin >= MAX_GPIO_PIN)
 		return -ERINVAL;
 
+	if (pin == 5) {
+		pr_err("XXX MSDC SD CD PIN be touched!\n");
+		dump_stack();
+	}
 #ifdef GPIO_BRINGUP
 
 
@@ -550,89 +540,6 @@ int mt_get_gpio_mode_base(unsigned long pin)
 	return (reg >> bit) & mask;
 }
 
-/*---------------------------------------------------------------------------*/
-int mt_set_gpio_slew_rate_base(unsigned long pin, unsigned long enable)
-{
-	return RSUCCESS;
-}
-
-/*---------------------------------------------------------------------------*/
-int mt_get_gpio_slew_rate_base(unsigned long pin)
-{
-	return RSUCCESS;
-}
-/*---------------------------------------------------------------------------*/
-int mt_set_gpio_pull_resistor_base(unsigned long pin, unsigned long resistors)
-{
-	return RSUCCESS;
-}
-/*---------------------------------------------------------------------------*/
-int mt_get_gpio_pull_resistor_base(unsigned long pin)
-{
-	return RSUCCESS;
-}
-/*---------------------------------------------------------------------------*/
-int mt_set_gpio_driving_base(unsigned long pin, unsigned long strength)
-{
-	unsigned long bit, reg;
-
-	if (pin >= MAX_GPIO_PIN)
-		return -ERINVAL;
-	bit = DRV_offset[pin].offset;
-	if (DRV_offset[pin].offset == -1)
-		return -1;
-	if (3 == DRV_width[pin].width) {
-		if (strength > 0x7)
-			return -ERWRAPPER;
-		reg = GPIO_RD32(DRV_addr[pin].addr);
-		reg &= ~(0x7 << bit);
-		GPIO_WR32(DRV_addr[pin].addr, reg);
-
-		reg = GPIO_RD32(DRV_addr[pin].addr);
-		reg |= (strength << bit);
-		GPIO_WR32(DRV_addr[pin].addr, reg);
-	} else if (2 == DRV_width[pin].width) {
-		if (strength > 0x3)
-			return -ERWRAPPER;
-		reg = GPIO_RD32(DRV_addr[pin].addr);
-		reg &= ~(0x3 << bit);
-		GPIO_WR32(DRV_addr[pin].addr, reg);
-
-		reg = GPIO_RD32(DRV_addr[pin].addr);
-		reg |= (strength << bit);
-		GPIO_WR32(DRV_addr[pin].addr, reg);
-	} else if (1 == DRV_width[pin].width) {
-		if (strength > 0x1)
-			return -ERWRAPPER;
-		reg = GPIO_RD32(DRV_addr[pin].addr);
-		reg &= ~(0x1 << bit);
-		GPIO_WR32(DRV_addr[pin].addr, reg);
-
-		reg = GPIO_RD32(DRV_addr[pin].addr);
-		reg |= (strength << bit);
-		GPIO_WR32(DRV_addr[pin].addr, reg);
-	}
-	return RSUCCESS;
-}
-
-int mt_get_gpio_driving_base(unsigned long pin)
-{
-	unsigned long bit;
-
-	if (pin >= MAX_GPIO_PIN)
-		return -ERINVAL;
-
-	bit = DRV_offset[pin].offset;
-	if (DRV_offset[pin].offset == -1)
-		return -1;
-	if (3 == DRV_width[pin].width)
-		return (GPIO_RD32(DRV_addr[pin].addr) >> bit) & 0x7;
-	else if (2 == DRV_width[pin].width)
-		return (GPIO_RD32(DRV_addr[pin].addr) >> bit) & 0x3;
-	else if (1 == DRV_width[pin].width)
-		return (GPIO_RD32(DRV_addr[pin].addr) >> bit) & 0x1;
-	return -ERINVAL;
-}
 /*---------------------------------------------------------------------------*/
 void get_gpio_vbase(struct device_node *node)
 {
