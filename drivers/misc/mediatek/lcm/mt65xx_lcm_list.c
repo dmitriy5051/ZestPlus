@@ -1156,6 +1156,15 @@ unsigned char lcm_name_list[][128] = {
 #if defined(R63417_FHD_DSI_CMD_TRULY_NT50358_HD)
 	"r63417_fhd_dsi_cmd_truly_nt50358_hd_drv",
 #endif
+
+#if defined(ILI9881C_DSI_VDO_HD720_LD_ZAL1506)
+extern LCM_DRIVER ili9881c_dsi_vdo_hd720_ld_zal1506_lcm_drv;
+#endif
+
+#if defined(HX8394F_DSI_VDO_HD720_BY_ZAL1506)
+extern LCM_DRIVER hx8394f_dsi_vdo_hd720_by_zal1506_lcm_drv;
+#endif
+
 };
 
 #define LCM_COMPILE_ASSERT(condition) LCM_COMPILE_ASSERT_X(condition, __LINE__)
